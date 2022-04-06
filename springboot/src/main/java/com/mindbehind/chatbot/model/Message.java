@@ -4,5 +4,10 @@ import lombok.Data;
 
 @Data
 public class Message {
-    private String content;
+    private String message;
+
+    public Message(){}
+    public Message(String content) {
+        this.message = content;
+    }
 }
