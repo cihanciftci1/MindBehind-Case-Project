@@ -4,10 +4,12 @@ import lombok.Data;
 
 @Data
 public class Message {
+    private String sender;
     private String message;
 
     public Message(){}
-    public Message(String content) {
-        this.message = content;
+    public Message(String sender,String message) {
+        this.sender=sender;
+        this.message = message;
     }
 }
