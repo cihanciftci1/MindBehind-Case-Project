@@ -5,49 +5,56 @@ import { over } from "stompjs"
 var stompClient = null;
 export default class App extends Component {
   state = {
-    key:1,
+    sender: "User",
     message: "",
-    messages:[]
+    messages: []
   }
 
   connect = () => {
+    let component = this;
+
     var socket = new SockJS('http://localhost:8080/chatbot');
+
     stompClient = over(socket);
     stompClient.connect({}, function (frame) {
-      stompClient.subscribe('/topic',this.handleReceivedMessage)
+      stompClient.subscribe('/topic', function (payload) {
+        var tempMessage = JSON.parse(payload.body)
+        var tempMessages = component.state.messages;
+        tempMessages.push(tempMessage);
+        component.setState(prevState => ({ ...prevState, message: "" }))
+      })
     });
   }
-  handleReceivedMessage=(payload)=>{
-    var tempMessages=this.state.messages;
-    tempMessages.push(JSON.parse(payload.body));
-    this.setState(prevState=>({...prevState,message:""}))
-    console.log(this.state.messages.message)
-  }
+
 
   send = () => {
-    stompClient.send('/app/receive', {},JSON.stringify({message:this.state.message}));
-    var tempMessages=this.state.messages;
-    tempMessages.push(this.state.message);
-    this.setState(prevState=>({...prevState,message:""}))
+    stompClient.send('/app/receive', {}, JSON.stringify({ sender: this.state.sender, message: this.state.message }));
   }
-  componentDidMount(){
+  componentDidMount() {
     this.connect();
   }
-  handleChange=(event)=>{
-    const {name,value}=event.target;
-    this.setState({[name]:value});
-  }
-  displayMessages=()=>{
-
+  handleChange = (event) => {
+    const { name, value } = event.target;
+    this.setState({ [name]: value });
   }
   render() {
     return (
-      <div className="input-group mb-3">
-        <input onChange={this.handleChange} type="text" className="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" name='message' value={this.state.message} />
-        <button onClick={()=>this.send()} className="btn btn-outline-secondary" type="button" id="button-addon2">Button</button>
-        {this.state.messages.map(message=>(
-          <p key={this.state.key++}>{message}</p>
-        ))}
+      <div className='row'>
+        <div className='col-md-4'></div>
+        <div className='col-md-4'>
+          <div className="input-group mb-4">
+            <input onChange={this.handleChange} type="text" className="form-control" placeholder="Write something" aria-describedby="button-addon2" name='message' value={this.state.message} />
+            <button onClick={() => this.send()} className="btn btn-outline-secondary" type="button" id="button-addon2">Send</button>
+          </div>
+          <ul>
+            {this.state.messages.map(object => (
+              <li key={this.state.messages.indexOf(object)}>
+                {object.sender}: {object.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className='col-md-3'></div>
       </div>
     )
   }
